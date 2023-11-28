@@ -7,14 +7,19 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'coordinates_translator.dart';
 
 class TextRecognizerPainter extends CustomPainter {
-  TextRecognizerPainter(this.recognizedText, this.absoluteImageSize,
-      this.rotation, this.renderBox, this.getScannedText,
-      {this.boxLeftOff = 4,
-      this.boxBottomOff = 2,
-      this.boxRightOff = 4,
-      this.boxTopOff = 2,
-      this.getRawData,
-      this.paintboxCustom});
+  TextRecognizerPainter(
+    this.recognizedText,
+    this.absoluteImageSize,
+    this.rotation,
+    this.renderBox,
+    this.getScannedText, {
+    this.boxLeftOff = 4,
+    this.boxBottomOff = 2,
+    this.boxRightOff = 4,
+    this.boxTopOff = 2,
+    this.getRawData,
+    this.paintboxCustom,
+  });
 
   /// ML kit recognizer
   final RecognizedText recognizedText;
@@ -93,10 +98,11 @@ class TextRecognizerPainter extends CustomPainter {
         size,
         absoluteImageSize);
 
-    final Paint paintbox = paintboxCustom ?? (Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..color = const Color.fromARGB(153, 102, 160, 241));
+    final Paint paintbox = paintboxCustom ??
+        (Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0
+          ..color = const Color.fromARGB(153, 102, 160, 241));
     canvas.drawRect(
       Rect.fromLTRB(boxLeft, boxTop, boxRight, boxBottom),
       paintbox,

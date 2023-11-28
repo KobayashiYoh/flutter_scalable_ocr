@@ -2,26 +2,27 @@ library flutter_scalable_ocr;
 
 import 'dart:developer';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+
 // import 'package:satya_textocr/src_path/SatyaTextKit.dart';
 import './text_recognizer_painter.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:camera/camera.dart';
 
 // import 'package:satya_textocr/satya_textocr.dart';
 class ScalableOCR extends StatefulWidget {
-  const ScalableOCR(
-      {Key? key,
-      this.boxLeftOff = 4,
-      this.boxRightOff = 4,
-      this.boxBottomOff = 2.7,
-      this.boxTopOff = 2.7,
-      this.boxHeight,
-      required this.getScannedText,
-      this.getRawData,
-      this.paintboxCustom})
-      : super(key: key);
+  const ScalableOCR({
+    Key? key,
+    this.boxLeftOff = 4,
+    this.boxRightOff = 4,
+    this.boxBottomOff = 2.7,
+    this.boxTopOff = 2.7,
+    this.boxHeight,
+    required this.getScannedText,
+    this.getRawData,
+    this.paintboxCustom,
+  }) : super(key: key);
 
   /// Offset on recalculated image left
   final double boxLeftOff;
@@ -89,26 +90,27 @@ class ScalableOCRState extends State<ScalableOCR> {
   Widget build(BuildContext context) {
     double sizeH = MediaQuery.of(context).size.height / 100;
     return Padding(
-        padding: EdgeInsets.all(sizeH * 3),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _controller == null ||
-                      _controller?.value == null ||
-                      _controller?.value.isInitialized == false
-                  ? Container(
-                      width: MediaQuery.of(context).size.width,
-                      height: sizeH * 19,
-                      decoration: BoxDecoration(
-                        color: Colors.grey,
-                        borderRadius: BorderRadius.circular(17),
-                      ),
-                    )
-                  : _liveFeedBody(),
-              SizedBox(height: sizeH * 2),
-            ],
-          ),
-        ));
+      padding: EdgeInsets.all(sizeH * 3),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            _controller == null ||
+                    _controller?.value == null ||
+                    _controller?.value.isInitialized == false
+                ? Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: sizeH * 19,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(17),
+                    ),
+                  )
+                : _liveFeedBody(),
+            SizedBox(height: sizeH * 2),
+          ],
+        ),
+      ),
+    );
   }
 
   // Body of live camera stream
@@ -164,18 +166,19 @@ class ScalableOCRState extends State<ScalableOCR> {
             ),
             if (customPaint != null)
               LayoutBuilder(
-                  builder: (BuildContext context, BoxConstraints constraints) {
-                maxWidth = constraints.maxWidth;
-                maxHeight = constraints.maxHeight;
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onScaleStart: _handleScaleStart,
-                  onScaleUpdate: _handleScaleUpdate,
-                  onTapDown: (TapDownDetails details) =>
-                      onViewFinderTap(details, constraints),
-                  child: customPaint!,
-                );
-              }),
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  maxWidth = constraints.maxWidth;
+                  maxHeight = constraints.maxHeight;
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onScaleStart: _handleScaleStart,
+                    onScaleUpdate: _handleScaleUpdate,
+                    onTapDown: (TapDownDetails details) =>
+                        onViewFinderTap(details, constraints),
+                    child: customPaint!,
+                  );
+                },
+              ),
           ],
         ),
       );
@@ -328,14 +331,16 @@ class ScalableOCRState extends State<ScalableOCR> {
     } else {
       customPaint = null;
     }
-    Future.delayed(const Duration(milliseconds: 900)).then((value) {
-      if (!converting) {
-        _isBusy = false;
-      }
+    Future.delayed(const Duration(milliseconds: 900)).then(
+      (value) {
+        if (!converting) {
+          _isBusy = false;
+        }
 
-      if (mounted) {
-        setState(() {});
-      }
-    });
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
   }
 }
