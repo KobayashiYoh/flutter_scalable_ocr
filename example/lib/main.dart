@@ -76,7 +76,10 @@ class _MyHomePageState extends State<MyHomePage> {
             StreamBuilder<String>(
               stream: controller.stream,
               builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-                return Text(snapshot.data != null ? snapshot.data! : "");
+                return Text(
+                  snapshot.data != null ? snapshot.data! : "",
+                  style: const TextStyle(color: Colors.white),
+                );
               },
             )
           ],

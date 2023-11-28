@@ -20,6 +20,7 @@ class TextRecognizerPainter extends CustomPainter {
     this.centerRadius = Radius.zero,
     this.getRawData,
     this.paintboxCustom,
+    this.fillCameraMargin = true,
   });
 
   /// ML kit recognizer
@@ -60,6 +61,8 @@ class TextRecognizerPainter extends CustomPainter {
 
   /// Narower box paint
   final Paint? paintboxCustom;
+
+  final bool fillCameraMargin;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -109,19 +112,26 @@ class TextRecognizerPainter extends CustomPainter {
       centerRadius,
     );
 
-    // draw background
-    final Rect deviceRect = Offset.zero & size;
-    final paint = Paint()..color = const Color(0xCC000000);
-    canvas.drawPath(
-      Path.combine(
-        PathOperation.difference,
-        Path()..addRect(deviceRect),
-        Path()..addRRect(centerRRect),
-      ),
-      paint,
-    );
+    // Fill camera margin with transparent black
+    if (fillCameraMargin) {
+      final Size deviceSize = Size(size.width, size.height * 3);
+      final Rect deviceRect = Rect.fromCenter(
+        center: Offset(deviceSize.width / 2, deviceSize.height / 5),
+        width: deviceSize.width,
+        height: deviceSize.height,
+      );
+      final paint = Paint()..color = const Color(0xCC000000);
+      canvas.drawPath(
+        Path.combine(
+          PathOperation.difference,
+          Path()..addRect(deviceRect),
+          Path()..addRRect(centerRRect),
+        ),
+        paint,
+      );
+    }
 
-    // draw center rectangle
+    // Draw center rectangle
     final Paint paintbox = paintboxCustom ??
         (Paint()
           ..style = PaintingStyle.stroke
