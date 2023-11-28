@@ -279,21 +279,25 @@ class ScalableOCRState extends State<ScalableOCR> {
           cameraPrev.currentContext?.findRenderObject() as RenderBox;
 
       var painter = TextRecognizerPainter(
-          recognizedText,
-          inputImage.metadata!.size,
-          inputImage.metadata!.rotation,
-          renderBox, (value) {
-        widget.getScannedText(value);
-      }, getRawData: (value) {
-        if (widget.getRawData != null) {
-          widget.getRawData!(value);
-        }
-      },
-          boxBottomOff: widget.boxBottomOff,
-          boxTopOff: widget.boxTopOff,
-          boxRightOff: widget.boxRightOff,
-          boxLeftOff: widget.boxRightOff,
-          paintboxCustom: widget.paintboxCustom);
+        recognizedText,
+        inputImage.metadata!.size,
+        inputImage.metadata!.rotation,
+        renderBox,
+        (value) {
+          widget.getScannedText(value);
+        },
+        getRawData: (value) {
+          if (widget.getRawData != null) {
+            widget.getRawData!(value);
+          }
+        },
+        boxBottomOff: widget.boxBottomOff,
+        boxTopOff: widget.boxTopOff,
+        boxRightOff: widget.boxRightOff,
+        boxLeftOff: widget.boxRightOff,
+        centerRadius: Radius.circular(8.0),
+        paintboxCustom: widget.paintboxCustom,
+      );
 
       customPaint = CustomPaint(painter: painter);
     } else {

@@ -17,6 +17,7 @@ class TextRecognizerPainter extends CustomPainter {
     this.boxBottomOff = 2,
     this.boxRightOff = 4,
     this.boxTopOff = 2,
+    this.centerRadius = Radius.zero,
     this.getRawData,
     this.paintboxCustom,
   });
@@ -50,6 +51,9 @@ class TextRecognizerPainter extends CustomPainter {
 
   /// Offset on recalculated image top
   final double boxTopOff;
+
+  /// Radius of center RRect
+  final Radius centerRadius;
 
   /// Get raw data from scanned image
   final Function? getRawData;
@@ -97,16 +101,37 @@ class TextRecognizerPainter extends CustomPainter {
         rotation,
         size,
         absoluteImageSize);
+    final RRect centerRRect = RRect.fromLTRBR(
+      boxLeft,
+      boxTop,
+      boxRight,
+      boxBottom,
+      centerRadius,
+    );
 
+    // draw background
+    final Rect deviceRect = Offset.zero & size;
+    final paint = Paint()..color = const Color(0xCC000000);
+    canvas.drawPath(
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(deviceRect),
+        Path()..addRRect(centerRRect),
+      ),
+      paint,
+    );
+
+    // draw center rectangle
     final Paint paintbox = paintboxCustom ??
         (Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.0
           ..color = const Color.fromARGB(153, 102, 160, 241));
-    canvas.drawRect(
-      Rect.fromLTRB(boxLeft, boxTop, boxRight, boxBottom),
+    canvas.drawRRect(
+      centerRRect,
       paintbox,
     );
+
     List textBlocks = [];
     for (final textBunk in recognizedText.blocks) {
       for (final element in textBunk.lines) {
