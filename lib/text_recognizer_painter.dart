@@ -12,15 +12,15 @@ class TextRecognizerPainter extends CustomPainter {
     this.absoluteImageSize,
     this.rotation,
     this.renderBox,
-    this.getScannedText, {
+    this.getScannedText,
+    this.centerRadius, {
     this.boxLeftOff = 4,
     this.boxBottomOff = 2,
     this.boxRightOff = 4,
     this.boxTopOff = 2,
-    this.centerRadius = Radius.zero,
     this.getRawData,
     this.paintboxCustom,
-    this.fillCameraMargin = true,
+    this.cameraMarginColor,
   });
 
   /// ML kit recognizer
@@ -62,7 +62,43 @@ class TextRecognizerPainter extends CustomPainter {
   /// Narower box paint
   final Paint? paintboxCustom;
 
-  final bool fillCameraMargin;
+  /// Color of camera margin
+  final Color? cameraMarginColor;
+
+  /// Fill camera margin with transparent black
+  void _fillCameraMargin(Canvas canvas, Size size, RRect centerRRect) {
+    if (cameraMarginColor == null) {
+      return;
+    }
+    final Size deviceSize = Size(size.width, size.height * 3);
+    final Rect deviceRect = Rect.fromCenter(
+      center: Offset(deviceSize.width / 2, deviceSize.height / 5),
+      width: deviceSize.width,
+      height: deviceSize.height,
+    );
+    final paint = Paint()..color = cameraMarginColor!;
+    canvas.drawPath(
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(deviceRect),
+        Path()..addRRect(centerRRect),
+      ),
+      paint,
+    );
+  }
+
+  /// Draw center rectangle
+  void _drawCenterRectangle(Canvas canvas, RRect centerRRect) {
+    final Paint paintbox = paintboxCustom ??
+        (Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0
+          ..color = const Color.fromARGB(153, 102, 160, 241));
+    canvas.drawRRect(
+      centerRRect,
+      paintbox,
+    );
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -83,27 +119,32 @@ class TextRecognizerPainter extends CustomPainter {
     var currentYOffset = offset.dy * siz;
 
     final boxLeft = translateX(
-        (currentScannerBoxWidth / boxLeftOff) + currentXOffset,
-        rotation,
-        size,
-        absoluteImageSize);
+      (currentScannerBoxWidth / boxLeftOff) + currentXOffset,
+      rotation,
+      size,
+      absoluteImageSize,
+    );
     final boxTop = translateY(
-        (currentScannerBoxHeight / boxTopOff) + currentYOffset,
-        rotation,
-        size,
-        absoluteImageSize);
+      (currentScannerBoxHeight / boxTopOff) + currentYOffset,
+      rotation,
+      size,
+      absoluteImageSize,
+    );
     final boxRight = translateX(
-        (currentScannerBoxWidth + currentXOffset) -
-            (currentScannerBoxWidth / boxRightOff),
-        rotation,
-        size,
-        absoluteImageSize);
+      (currentScannerBoxWidth + currentXOffset) -
+          (currentScannerBoxWidth / boxRightOff),
+      rotation,
+      size,
+      absoluteImageSize,
+    );
     final boxBottom = translateY(
-        (currentScannerBoxHeight + currentYOffset) -
-            (currentScannerBoxHeight / boxBottomOff),
-        rotation,
-        size,
-        absoluteImageSize);
+      (currentScannerBoxHeight + currentYOffset) -
+          (currentScannerBoxHeight / boxBottomOff),
+      rotation,
+      size,
+      absoluteImageSize,
+    );
+
     final RRect centerRRect = RRect.fromLTRBR(
       boxLeft,
       boxTop,
@@ -112,35 +153,8 @@ class TextRecognizerPainter extends CustomPainter {
       centerRadius,
     );
 
-    // Fill camera margin with transparent black
-    if (fillCameraMargin) {
-      final Size deviceSize = Size(size.width, size.height * 3);
-      final Rect deviceRect = Rect.fromCenter(
-        center: Offset(deviceSize.width / 2, deviceSize.height / 5),
-        width: deviceSize.width,
-        height: deviceSize.height,
-      );
-      final paint = Paint()..color = const Color(0xCC000000);
-      canvas.drawPath(
-        Path.combine(
-          PathOperation.difference,
-          Path()..addRect(deviceRect),
-          Path()..addRRect(centerRRect),
-        ),
-        paint,
-      );
-    }
-
-    // Draw center rectangle
-    final Paint paintbox = paintboxCustom ??
-        (Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.0
-          ..color = const Color.fromARGB(153, 102, 160, 241));
-    canvas.drawRRect(
-      centerRRect,
-      paintbox,
-    );
+    _fillCameraMargin(canvas, size, centerRRect);
+    _drawCenterRectangle(canvas, centerRRect);
 
     List textBlocks = [];
     for (final textBunk in recognizedText.blocks) {
@@ -153,9 +167,12 @@ class TextRecognizerPainter extends CustomPainter {
           final right = translateX(
               (textBlock.boundingBox.right), rotation, size, absoluteImageSize);
 
-          if (left >= boxLeft &&
-              right <= boxRight &&
-              (top >= (boxTop + 15) && top <= (boxBottom - 20))) {
+          final bool isWithinHorizontalBounds =
+              left >= boxLeft && right <= boxRight;
+          final bool isWithinVerticalBounds =
+              top >= (boxTop + 15) && top <= (boxBottom - 20);
+
+          if (isWithinHorizontalBounds && isWithinVerticalBounds) {
             textBlocks.add(textBlock);
 
             var parsedText = textBlock.text;
@@ -163,20 +180,27 @@ class TextRecognizerPainter extends CustomPainter {
 
             final ParagraphBuilder builder = ParagraphBuilder(
               ParagraphStyle(
-                  textAlign: TextAlign.left,
-                  fontSize: 14,
-                  textDirection: TextDirection.ltr),
+                textAlign: TextAlign.left,
+                fontSize: 14,
+                textDirection: TextDirection.ltr,
+              ),
             );
             builder.pushStyle(
-                ui.TextStyle(color: Colors.white, background: background));
+              ui.TextStyle(
+                color: Colors.white,
+                background: background,
+              ),
+            );
             builder.addText(parsedText);
             builder.pop();
 
             canvas.drawParagraph(
               builder.build()
-                ..layout(ParagraphConstraints(
-                  width: right - left,
-                )),
+                ..layout(
+                  ParagraphConstraints(
+                    width: right - left,
+                  ),
+                ),
               Offset(left, top),
             );
           }

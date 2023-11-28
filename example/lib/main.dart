@@ -58,21 +58,24 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Stack(
           children: [
             ScalableOCR(
-                paintboxCustom: Paint()
-                  ..style = PaintingStyle.stroke
-                  ..strokeWidth = 4.0
-                  ..color = const Color.fromARGB(153, 102, 160, 241),
-                boxLeftOff: 5,
-                boxBottomOff: 2.5,
-                boxRightOff: 5,
-                boxTopOff: 2.5,
-                boxHeight: MediaQuery.of(context).size.height / 3,
-                getRawData: (value) {
-                  inspect(value);
-                },
-                getScannedText: (value) {
-                  setText(value);
-                }),
+              paintboxCustom: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 4.0
+                ..color = Colors.blue,
+              boxLeftOff: 5,
+              boxBottomOff: 2.5,
+              boxRightOff: 5,
+              boxTopOff: 2.5,
+              centerRadius: const Radius.circular(8.0),
+              boxHeight: MediaQuery.of(context).size.height / 3,
+              getRawData: (value) {
+                inspect(value);
+              },
+              getScannedText: (value) {
+                setText(value);
+              },
+              cameraMarginColor: const Color(0xCC000000),
+            ),
             StreamBuilder<String>(
               stream: controller.stream,
               builder: (BuildContext context, AsyncSnapshot<String> snapshot) {

@@ -18,10 +18,12 @@ class ScalableOCR extends StatefulWidget {
     this.boxRightOff = 4,
     this.boxBottomOff = 2.7,
     this.boxTopOff = 2.7,
+    this.centerRadius = Radius.zero,
     this.boxHeight,
     required this.getScannedText,
     this.getRawData,
     this.paintboxCustom,
+    this.cameraMarginColor,
   }) : super(key: key);
 
   /// Offset on recalculated image left
@@ -36,6 +38,9 @@ class ScalableOCR extends StatefulWidget {
   /// Offset on recalculated image top
   final double boxTopOff;
 
+  /// Radius of center RRect
+  final Radius centerRadius;
+
   /// Height of narowed image
   final double? boxHeight;
 
@@ -47,6 +52,9 @@ class ScalableOCR extends StatefulWidget {
 
   /// Narower box paint
   final Paint? paintboxCustom;
+
+  /// Color of camera margin
+  final Color? cameraMarginColor;
 
   @override
   ScalableOCRState createState() => ScalableOCRState();
@@ -61,10 +69,11 @@ class ScalableOCRState extends State<ScalableOCR> {
   bool _isBusy = false;
   bool converting = false;
   CustomPaint? customPaint;
-  // String? _text;
   CameraController? _controller;
   late List<CameraDescription> _cameras;
-  double zoomLevel = 3.0, minZoomLevel = 0.0, maxZoomLevel = 10.0;
+  double zoomLevel = 3.0;
+  double minZoomLevel = 0.0;
+  double maxZoomLevel = 10.0;
   // Counting pointers (number of user fingers on screen)
   final double _minAvailableZoom = 1.0;
   final double _maxAvailableZoom = 10.0;
@@ -72,7 +81,6 @@ class ScalableOCRState extends State<ScalableOCR> {
   double _baseScale = 3.0;
   double maxWidth = 0;
   double maxHeight = 0;
-  String convertingAmount = "";
 
   @override
   void initState() {
@@ -88,17 +96,17 @@ class ScalableOCRState extends State<ScalableOCR> {
 
   @override
   Widget build(BuildContext context) {
+    return _liveFeedBody();
+  }
+
+  // Body of live camera stream
+  Widget _liveFeedBody() {
     final bool isNotInitializedCamera = _controller == null ||
         _controller?.value == null ||
         _controller?.value.isInitialized == false;
     if (isNotInitializedCamera) {
       return SizedBox.shrink();
     }
-    return _liveFeedBody();
-  }
-
-  // Body of live camera stream
-  Widget _liveFeedBody() {
     const double previewAspectRatio = 0.5;
     return SizedBox(
       height: widget.boxHeight ?? MediaQuery.of(context).size.height / 5,
@@ -272,13 +280,14 @@ class ScalableOCRState extends State<ScalableOCR> {
     _isBusy = true;
 
     final recognizedText = await _textRecognizer.processImage(inputImage);
-    if (inputImage.metadata?.size != null &&
-        inputImage.metadata?.rotation != null &&
-        cameraPrev.currentContext != null) {
+    final bool isImageMetadataAvailable = inputImage.metadata?.size != null &&
+        inputImage.metadata?.rotation != null;
+    final bool isCameraContextAvailable = cameraPrev.currentContext != null;
+    if (isImageMetadataAvailable && isCameraContextAvailable) {
       final RenderBox renderBox =
           cameraPrev.currentContext?.findRenderObject() as RenderBox;
 
-      var painter = TextRecognizerPainter(
+      final painter = TextRecognizerPainter(
         recognizedText,
         inputImage.metadata!.size,
         inputImage.metadata!.rotation,
@@ -291,12 +300,13 @@ class ScalableOCRState extends State<ScalableOCR> {
             widget.getRawData!(value);
           }
         },
+        widget.centerRadius,
         boxBottomOff: widget.boxBottomOff,
         boxTopOff: widget.boxTopOff,
         boxRightOff: widget.boxRightOff,
         boxLeftOff: widget.boxRightOff,
-        centerRadius: Radius.circular(8.0),
         paintboxCustom: widget.paintboxCustom,
+        cameraMarginColor: widget.cameraMarginColor,
       );
 
       customPaint = CustomPaint(painter: painter);
